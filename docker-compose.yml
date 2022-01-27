@@ -1,0 +1,51 @@
+version: "3.8"
+services:
+  db:
+    build: ./db
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: shopper
+    restart: always
+    volumes: 
+    - shopper-db:/var/lib/mysql
+  myadmin:
+    depends_on:
+    - db
+    restart: always
+    image: phpmyadmin:latest
+    ports:
+    - "8080:80"
+    environment:
+        PMA_HOST: db
+  server:
+    build: ./server
+    environment:
+      MYSQL_DATABASE: shopper
+      MYSQL_USER: root
+      MYSQL_PASSWORD: password
+      MYSQL_HOST: db
+    ports:
+    - "3001:3001"
+    depends_on:
+    - db
+    restart: on-failure
+  shopper-client:
+    build: ./client
+    ports:
+    - "3000:3000"
+    links:
+    - server
+    restart: on-failure
+  nginx:
+    depends_on:
+    - server
+    - shopper-client
+    restart: always
+    build: ./nginx
+    ports:
+    - "3050:80"
+
+volumes:
+  shopper-db:
+    
+      
